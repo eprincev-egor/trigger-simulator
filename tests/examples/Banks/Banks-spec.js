@@ -11,11 +11,11 @@ const Table = require("../../../src/Table");
 const {andFilter, orFilter} = require("../../../src/helpers");
 
 QUnit.module("Banks", {}, function() {
-    
+
     class Banks extends Table {
         constructor() {
             super();
-            
+
             this.columns = {
                 id: "number",
                 bik: "text",
@@ -24,11 +24,11 @@ QUnit.module("Banks", {}, function() {
             };
         }
     }
-    
+
     class BanksAccounts extends Table {
         constructor() {
             super();
-            
+
             this.columns = {
                 id: "number",
                 account_number: "text",
@@ -37,18 +37,18 @@ QUnit.module("Banks", {}, function() {
             };
         }
     }
-    
+
     let banks = new Banks();
     let banksAccounts = new BanksAccounts();
-    
-    banks.addTrigger({
+
+    banks.createTrigger({
         name: "create_default_bank_account",
         after: {
             insert: true
         }
     }, function(event) {
         let bankRow = event.newRow;
-        
+
         if ( event.newRow.id_user_create ) {
             banksAccounts.insert({
                 id_bank: bankRow.id,
@@ -56,16 +56,16 @@ QUnit.module("Banks", {}, function() {
             });
         }
     });
-    
+
     QUnit.test( "create account", function( assert ) {
-        
+
         let newBank = banks.insert({
             id_user_create: 1
         });
-        
+
         let newBankAccount = banksAccounts.selectRow(row => row.id_bank == newBank.id);
-        
+
         assert.equal( newBankAccount.id_user, 1, "success create bank account" );
-        
+
     });
 });

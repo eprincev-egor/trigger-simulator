@@ -14,7 +14,12 @@
     "type": "git",
     "url": "git+https://github.com/eprincev-egor/trigger-simulator"
   },
-  "keywords": ["trigger", "db", "sql", "simulator"],
+  "keywords": [
+    "trigger",
+    "db",
+    "sql",
+    "simulator"
+  ],
   "author": "Eprincev Egor",
   "license": "MIT",
   "bugs": {},
