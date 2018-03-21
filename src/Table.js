@@ -123,7 +123,12 @@ class Table extends Events {
         let tmpRow = cloneRow( row );
         for (let key in this.columns) {
             let column = this.columns[ key ];
-            if ( column && column.default ) {
+
+            if (
+                column &&
+                typeof column == "object" &&
+                "default" in column
+            ) {
                 if ( !(key in tmpRow) ) {
                     tmpRow[ key ] = column.default;
                 }
@@ -153,6 +158,19 @@ class Table extends Events {
 
                 if ( existsId == tmpRow.id ) {
                     throw new Error("duplicate id");
+                }
+            }
+
+            for (let key in this.columns) {
+                let column = this.columns[ key ];
+                if ( !column || typeof column == "string"  ) {
+                    continue;
+                }
+
+                if ( column.nulls === false ) {
+                    if ( tmpRow[ key ] == null ) {
+                        throw new Error(key + " not null");
+                    }
                 }
             }
 
@@ -252,6 +270,19 @@ class Table extends Events {
                         if ( existsId == tmpRow.id ) {
                             throw new Error("duplicate id");
                         }
+                    }
+                }
+            }
+            
+            for (let key in this.columns) {
+                let column = this.columns[ key ];
+                if ( !column || typeof column == "string"  ) {
+                    continue;
+                }
+
+                if ( column.nulls === false ) {
+                    if ( tmpRow[ key ] == null ) {
+                        throw new Error(key + " not null");
                     }
                 }
             }

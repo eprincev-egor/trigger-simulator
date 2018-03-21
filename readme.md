@@ -24,7 +24,8 @@ class MyTable extends Table {
             // column is string (type) or
             // object: {
             //    type: "number",
-            //    default: 1
+            //    default: 1,
+            //    nulls: false
             // }
 
             id: "number",

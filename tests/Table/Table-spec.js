@@ -1005,6 +1005,10 @@ QUnit.module("Table", {}, function() {
                     id_country: {
                         type: "number",
                         default: 1
+                    },
+                    some_numb: {
+                        type: "number",
+                        default: 0
                     }
                 };
             }
@@ -1015,12 +1019,63 @@ QUnit.module("Table", {}, function() {
 
         company = companies.insert();
         assert.equal(company.id_country, 1, "default country");
+        assert.equal(company.some_numb, 0, "default some_numb 0");
 
         company = companies.insert({ id_country: 2 });
         assert.equal(company.id_country, 2, "country by insert data");
 
         company = companies.insert({ id_country: null });
         assert.equal(company.id_country, null, "null country by insert data");
+
+        let default_id_country_in_before_trigger;
+        companies.createTrigger({
+            before: {insert: true}
+        }, (e) => {
+            default_id_country_in_before_trigger = e.newRow.id_country;
+        });
+
+        company = companies.insert();
+        assert.equal(default_id_country_in_before_trigger, 1, "default country in before trigger");
+    });
+
+    QUnit.test("not null", function(assert) {
+        class Company extends Table {
+            constructor() {
+                super();
+                this.columns = {
+                    id: "number",
+                    inn: {
+                        type: "text",
+                        nulls: false,
+                        default: "(no inn)"
+                    },
+                    name: {
+                        type: "text",
+                        nulls: false
+                    }
+                };
+            }
+        }
+
+        let companies = new Company();
+        let company;
+
+        try {
+            company = companies.insert();
+            assert.ok(false, "expected error on companies.insert()");
+        } catch(err) {
+            assert.ok(true, "expected error on companies.insert()");
+        }
+
+        company = companies.insert({ name: "nice" });
+        assert.equal(company.name, "nice", "succes insert with name");
+
+        try {
+            company = companies.update({ name: null });
+            assert.ok(false, "expected error on companies.update({ name: null })");
+        } catch(err) {
+            assert.ok(true, "expected error on companies.insert({ name: null })");
+        }
     });
 
 });
