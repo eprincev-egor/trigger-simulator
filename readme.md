@@ -16,7 +16,7 @@ Write your code in Demo/Demo-spec.js
 ```js
 "use strict";
 
-const Table = require("./src/Table");
+const {Table} = require("trigger-simulator");
 
 class MyTable extends Table {
     constructor() {

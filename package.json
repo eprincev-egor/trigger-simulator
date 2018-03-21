@@ -2,7 +2,7 @@
   "name": "trigger-simulator",
   "version": "0.0.1",
   "description": "Simple trigger simulator",
-  "main": "src/Table.js",
+  "main": "src/index.js",
   "directories": {},
   "scripts": {
     "test": "qunit tests/**/*-spec.js",
