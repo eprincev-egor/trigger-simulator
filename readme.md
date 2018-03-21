@@ -101,6 +101,12 @@ table.update(
     row => row.id > 3 
 );
 
+// delete all rows
+table.delete();
+
+// delete some rows
+table.delete(row => row.id % 2 === 0);
+
 // Triggers:
 
 // before insert
@@ -167,6 +173,30 @@ table.createTrigger({
     }
 }, function(event) {
     // event also in simple update trigger
+});
+
+// before delete
+table.createTrigger({
+    before: {
+        delete: true
+    }
+}, function(event) {
+    event.tg_op;      // delete
+    event.isBefore;   // true
+    event.isAfter;    // false
+    event.oldRow;     // deleting row object
+});
+
+// after delete
+table.createTrigger({
+    after: {
+        delete: true
+    }
+}, function(event) {
+    event.tg_op;      // delete
+    event.isBefore;   // false
+    event.isAfter;    // true
+    event.oldRow;     // deleting row object
 });
 
 ```

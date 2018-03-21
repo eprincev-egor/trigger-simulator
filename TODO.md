@@ -14,7 +14,7 @@
 + default values
 + not null
 + update(  updatingRow => ({ sum: updatingRow.sum + 1 })  )
-- delete
++ delete
 - validate types
 - foreign key
 - unique

@@ -56,7 +56,7 @@ class Table extends Events {
 
     select(select, iteration) {
         if ( !select ) {
-            throw new Error("select must be are function");
+            select = function() {return true;};
         }
 
         let rows = this.rows.filter(row => {
@@ -75,13 +75,13 @@ class Table extends Events {
 
     selectRow(select) {
         if ( !select ) {
-            throw new Error("select must be are function");
+            select = function() {return true;};
         }
 
         let rows = this.select(select);
 
         if ( rows.length > 1 ) {
-            throw new Error("под фильтр попадают несколько строк");
+            throw new Error("subquery returned more than one row");
         }
 
         if ( rows.length === 0 ) {
@@ -94,10 +94,6 @@ class Table extends Events {
     selectValue(column, select) {
         if ( !column ) {
             throw new Error("column must be are string");
-        }
-
-        if ( !select ) {
-            throw new Error("select must be are function");
         }
 
         let row = this.selectRow(select);
@@ -205,11 +201,6 @@ class Table extends Events {
     }
 
     update(changes, select) {
-        if ( !select ) {
-            // update some_table set deleted = deleted
-            select = function() {return true;};
-        }
-
         let isFirstIteration = false;
         if ( !currentCommit ) {
             isFirstIteration = true;
@@ -323,6 +314,53 @@ class Table extends Events {
             throw err;
         }
     }
+    
+    delete(select) {
+        let rows = this.select(select);
+        
+        let isFirstIteration = false;
+        if ( !currentCommit ) {
+            isFirstIteration = true;
+            currentCommit = new Commit();
+        }
+        
+        try {
+            rows.forEach(row => {
+                this.trigger("before:delete", {
+                    tg_op: "delete",
+                    isBefore: true,
+                    isAfter: false,
+                    oldRow: cloneRow(row)
+                });
+                
+                let index = this.rows.indexOf( row );
+                if ( index != -1 ) {
+                    this.rows.splice(index, 1);
+                }
+                currentCommit.addReverse(() => {
+                    this.rows.push( row );
+                });
+
+                this.trigger("after:delete", {
+                    tg_op: "delete",
+                    isBefore: false,
+                    isAfter: true,
+                    oldRow: cloneRow(row)
+                });
+            });
+            
+            // close commit on ok
+            if ( isFirstIteration ) {
+                currentCommit = null;
+            }
+        } catch(err) {
+            if ( isFirstIteration ) {
+                currentCommit.rollback();
+                currentCommit = null;
+            }
+            throw err;
+        }
+    }
 
     createTrigger(events, callback) {
         let updateEventName,
@@ -337,6 +375,10 @@ class Table extends Events {
             if ( events.before.insert ) {
                 this.on("before:insert", callback);
             }
+            
+            if ( events.before.delete ) {
+                this.on("before:delete", callback);
+            }
         }
 
         if ( events.after ) {
@@ -347,6 +389,10 @@ class Table extends Events {
 
             if ( events.after.insert ) {
                 this.on("after:insert", callback);
+            }
+            
+            if ( events.after.delete ) {
+                this.on("after:delete", callback);
             }
         }
 

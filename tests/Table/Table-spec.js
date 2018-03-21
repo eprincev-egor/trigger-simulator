@@ -281,7 +281,7 @@ QUnit.module("Table", {}, function() {
 
         try {
             table.insert();
-            assert.ok(false, "set id = 1 in before trigger, expected duplicate rror");
+            assert.ok(false, "set id = 1 in before trigger, expected duplicate error");
         } catch(err) {
             assert.ok(true, "set id = 1 in before trigger, expected duplicate error");
         }
@@ -1086,7 +1086,7 @@ QUnit.module("Table", {}, function() {
                     id: "number",
                     sum: {
                         type: "number",
-                        default: 0,
+                        default: 1,
                         nulls: false
                     }
                 };
@@ -1105,7 +1105,7 @@ QUnit.module("Table", {}, function() {
         
         assert.equal(
             companies.selectValue("sum", company => company.id == 1),
-            0
+            2
         );
         
         assert.equal(
@@ -1127,6 +1127,190 @@ QUnit.module("Table", {}, function() {
             companies.selectValue("sum", company => company.id == 5),
             800
         );
+    });
+    
+    QUnit.test("delete", function(assert) {
+        class Company extends Table {
+            constructor() {
+                super();
+                this.columns = {
+                    id: "number",
+                    name: {
+                        type: "text",
+                        nulls: false
+                    }
+                };
+            }
+        }
+        
+        let companies = new Company();
+        let company;
+        
+        companies.insert({ name: "Hello delete" });
+        company = companies.selectRow(row => row.id == 1);
+        assert.equal(company.name, "Hello delete");
+        
+        companies.delete();
+        company = companies.selectRow(row => row.id == 1);
+        assert.equal(company, null);
+        
+        
+        companies.insert({ name: "name2" });
+        assert.equal(companies.selectValue("name"), "name2");
+        company = companies.select(row => row.id == 2);
+        company = company[0];
+        assert.equal(company.name, "name2");
+        
+        companies.delete(row => row.id == 2);
+        assert.equal(companies.selectValue("name"), null);
+    });
+    
+    QUnit.test("before:delete 1", function( assert ) {
+        class TestTable extends Table {
+            constructor() {
+                super();
+                this.columns = {
+                    id: "number",
+                    name: "text"
+                };
+            }
+        }
+
+        let table = new TestTable();
+        let event;
+        let selectedRow;
+
+        table.createTrigger({
+            before: {
+                delete: true
+            }
+        }, (e) => {
+            event = e;
+
+            selectedRow = table.selectRow(andFilter({ id: 1 }));
+        });
+        
+        table.insert();
+        assert.equal(table.selectValue("id"), 1);
+        
+        table.delete();
+
+        assert.equal(event.tg_op, "delete", "before delete e.tg_op == 'delete'");
+        assert.ok(event.isBefore === true, "before delete e.isBefore === true");
+        assert.ok(event.isAfter === false, "before delete e.isAfter === false");
+        assert.equal(event.oldRow.id, 1, "before delete e.oldRow.id == 1");
+        assert.ok(selectedRow, "in before delete trigger, you can see deleting row in selects");
+    });
+    
+    QUnit.test("before:delete error in trigger for stop deleting", function( assert ) {
+        class TestTable extends Table {
+            constructor() {
+                super();
+                this.columns = {
+                    id: "number",
+                    name: "text"
+                };
+            }
+        }
+
+        let table = new TestTable();
+
+        table.createTrigger({
+            before: {
+                delete: true
+            }
+        }, () => {
+            throw new Error("stop deleting");
+        });
+        
+        table.insert();
+        assert.equal(table.selectValue("id"), 1);
+        
+        try {
+            table.delete();
+            assert.ok(false, "expected error");
+        } catch(err) {
+            assert.ok(true, "expected error");
+        }
+        
+        assert.equal(table.selectValue("id"), 1);
+    });
+    
+    QUnit.test("after:delete 1", function( assert ) {
+        class TestTable extends Table {
+            constructor() {
+                super();
+                this.columns = {
+                    id: "number",
+                    name: "text"
+                };
+            }
+        }
+
+        let table = new TestTable();
+        let event;
+        let selectedRow;
+
+        table.createTrigger({
+            after: {
+                delete: true
+            }
+        }, (e) => {
+            event = e;
+
+            selectedRow = table.selectRow(andFilter({
+                id: 1
+            }));
+        });
+
+        table.insert();
+        assert.equal(table.selectValue("id"), 1);
+        
+        table.delete();
+
+        assert.equal(event.tg_op, "delete", "after delete e.tg_op == 'delete'");
+        assert.ok(event.isBefore === false, "after delete e.isBefore === false");
+        assert.ok(event.isAfter === true, "after delete e.isAfter === true");
+        assert.equal(event.oldRow.id, 1, "after delete e.oldRow.id == 1");
+        assert.ok(!selectedRow, "in after delete trigger, you can't see deleting row");
+    });
+    
+    QUnit.test("after:delete error in trigger for stop deleting", function( assert ) {
+        class TestTable extends Table {
+            constructor() {
+                super();
+                this.columns = {
+                    id: "number",
+                    name: "text"
+                };
+            }
+        }
+
+        let table = new TestTable();
+        
+        // commit must close on succes delete
+        table.insert();
+        table.delete();
+        table.insert({ id: 1 });
+        
+        table.createTrigger({
+            after: {
+                delete: true
+            }
+        }, () => {
+            throw new Error("stop deleting");
+        });
+        
+        assert.equal(table.selectValue("id"), 1);
+        
+        try {
+            table.delete();
+            assert.ok(false, "expected error");
+        } catch(err) {
+            assert.ok(true, "expected error");
+        }
+        
+        assert.equal(table.selectValue("id"), 1);
     });
 
 });
