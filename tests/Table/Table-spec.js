@@ -1077,5 +1077,56 @@ QUnit.module("Table", {}, function() {
             assert.ok(true, "expected error on companies.insert({ name: null })");
         }
     });
+    
+    QUnit.test("update(function)", function(assert) {
+        class Company extends Table {
+            constructor() {
+                super();
+                this.columns = {
+                    id: "number",
+                    sum: {
+                        type: "number",
+                        default: 0,
+                        nulls: false
+                    }
+                };
+            }
+        }
+        
+        let companies = new Company();
+        
+        companies.insert();
+        companies.insert({ sum: 100 });
+        companies.insert({ sum: 200 });
+        companies.insert({ sum: 300 });
+        companies.insert({ sum: 400 });
+        
+        companies.update( company => ({ sum: company.sum * 2 }) );
+        
+        assert.equal(
+            companies.selectValue("sum", company => company.id == 1),
+            0
+        );
+        
+        assert.equal(
+            companies.selectValue("sum", company => company.id == 2),
+            200
+        );
+        
+        assert.equal(
+            companies.selectValue("sum", company => company.id == 3),
+            400
+        );
+        
+        assert.equal(
+            companies.selectValue("sum", company => company.id == 4),
+            600
+        );
+        
+        assert.equal(
+            companies.selectValue("sum", company => company.id == 5),
+            800
+        );
+    });
 
 });

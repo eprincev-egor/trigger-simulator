@@ -13,6 +13,7 @@
 + tests
 + default values
 + not null
++ update(  updatingRow => ({ sum: updatingRow.sum + 1 })  )
 - delete
 - validate types
 - foreign key

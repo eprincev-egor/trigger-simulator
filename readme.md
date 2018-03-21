@@ -21,16 +21,17 @@ const {Table} = require("trigger-simulator");
 class MyTable extends Table {
     constructor() {
         this.columns = {
-            // column is string (type) or
-            // object: {
-            //    type: "number",
-            //    default: 1,
-            //    nulls: false
-            // }
-
+            // id is primary key with serial
             id: "number",
             name: "text",
-            note: "text"
+            note: "text",
+            sum: {
+                type: "number",
+                // default value on insert
+                default: 10,
+                // not null
+                nulls: false
+            }
         };
     }
 }
@@ -85,6 +86,20 @@ let rowsAfterUpdate = table.select(row ==> true);
 // update some rows
 table.update({ name: "Name #1" }, row => row.id == 1);
 
+// up sum for all rows
+table.update(row => ({
+    sum: row.sum + 2
+}) );
+
+// up sum for some rows
+table.update(
+    // set
+    row => ({
+        sum: row.sum * row.sum
+    }), 
+    // where
+    row => row.id > 3 
+);
 
 // Triggers:
 

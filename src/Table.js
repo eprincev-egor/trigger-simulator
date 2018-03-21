@@ -235,6 +235,10 @@ class Table extends Events {
     }
 
     _set(row, changes) {
+        if ( typeof changes == "function" ) {
+            changes = changes(row);
+        }
+        
         let keys = Object.keys(changes);
         let oldRow = cloneRow(row);
         let oldValues = {};
