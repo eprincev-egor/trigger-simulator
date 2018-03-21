@@ -1,12 +1,12 @@
 # Trigger simulator
 
 ## install
-```$ npm i```
+```$ npm i```  
 ```$ npm build```
 
 ## usage
-```$ npm run create template=default project=Demo```
-```$ npm run watch```
+```$ npm run create template=default project=Demo```  
+```$ npm run watch```  
 ```$ npm run test```
 
 Now in dir ./tests you can see new folder Demo.
@@ -55,9 +55,11 @@ let insertedRows = table.insert([
 // ]
 
 // select one value
+// (throw warning, only one row must be match filter)
 let name1 = table.selectValue("name", row => row.id == 2); // "Hello"
 
 // select one row
+// (throw warning, only one row must be match filter)
 let row1 = table.selectRow(row => row.name == "Hello"); // {id: 2, name: "Hello"}
 
 // select some rows
@@ -87,7 +89,7 @@ table.update({ name: "Name #1" }, row => row.id == 1);
 // Triggers:
 
 // before insert
-table.addTrigger({
+table.createTrigger({
     before: {
         insert: true
     }
@@ -102,7 +104,7 @@ table.addTrigger({
 });
 
 // after insert
-table.addTrigger({
+table.createTrigger({
     after: {
         insert: true
     }
@@ -114,7 +116,7 @@ table.addTrigger({
 });
 
 // before update
-table.addTrigger({
+table.createTrigger({
     before: {
         update: true
     }
@@ -130,7 +132,7 @@ table.addTrigger({
 });
 
 // after update
-table.addTrigger({
+table.createTrigger({
     after: {
         update: true
     }
@@ -143,7 +145,7 @@ table.addTrigger({
 });
 
 // update on columns
-table.addTrigger({
+table.createTrigger({
     // before or after
     after: {
         update: ["some_column"]
