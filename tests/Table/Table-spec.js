@@ -996,5 +996,31 @@ QUnit.module("Table", {}, function() {
         assert.equal( logsRows[1].log, "Client: 1, old sum: 100, new sum: 300", "check first log");
     });
 
+    QUnit.test("default values", function(assert) {
+        class Company extends Table {
+            constructor() {
+                super();
+                this.columns = {
+                    id: "number",
+                    id_country: {
+                        type: "number",
+                        default: 1
+                    }
+                };
+            }
+        }
+
+        let companies = new Company();
+        let company;
+
+        company = companies.insert();
+        assert.equal(company.id_country, 1, "default country");
+
+        company = companies.insert({ id_country: 2 });
+        assert.equal(company.id_country, 2, "country by insert data");
+
+        company = companies.insert({ id_country: null });
+        assert.equal(company.id_country, null, "null country by insert data");
+    });
 
 });

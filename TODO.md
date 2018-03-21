@@ -11,6 +11,7 @@
 + before:update of columns trigger
 + after:update of columns trigger
 + tests
++ default values
 - delete
 - validate types
 - foreign key

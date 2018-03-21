@@ -121,6 +121,14 @@ class Table extends Events {
         }
 
         let tmpRow = cloneRow( row );
+        for (let key in this.columns) {
+            let column = this.columns[ key ];
+            if ( column && column.default ) {
+                if ( !(key in tmpRow) ) {
+                    tmpRow[ key ] = column.default;
+                }
+            }
+        }
 
         try {
             this.trigger("before:insert", {
