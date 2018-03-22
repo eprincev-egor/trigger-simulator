@@ -1,5 +1,5 @@
 # Trigger simulator
-Test your trigger logic on JavaScript with trigger simulator
+Test your trigger logic on JavaScript with trigger simulator  
 ![CI status](https://circleci.com/gh/eprincev-egor/trigger-simulator.svg?style=shield)
 
 ## install
