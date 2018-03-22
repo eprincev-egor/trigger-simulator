@@ -31,6 +31,7 @@ class MyTable extends Table {
             sum: {
                 type: "number",
                 // default value on insert
+                // can be function() {return value}
                 default: 10,
                 // not null
                 nulls: false

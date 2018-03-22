@@ -126,7 +126,11 @@ class Table extends Events {
                 "default" in column
             ) {
                 if ( !(key in tmpRow) ) {
-                    tmpRow[ key ] = column.default;
+                    let value = column.default;
+                    if ( typeof value === "function" ) {
+                        value = value();
+                    }
+                    tmpRow[ key ] = value;
                 }
             }
         }

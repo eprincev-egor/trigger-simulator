@@ -1,3 +1,4 @@
+exists:
 + add TODO.md
 + templates
 + insert
@@ -12,9 +13,13 @@
 + after:update of columns trigger
 + tests
 + default values
++ default value as function() {return value}
 + not null
 + update(  updatingRow => ({ sum: updatingRow.sum + 1 })  )
 + delete
+  
+  
+need:  
 - validate types
 - foreign key
 - unique

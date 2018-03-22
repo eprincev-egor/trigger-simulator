@@ -1312,5 +1312,38 @@ QUnit.module("Table", {}, function() {
         
         assert.equal(table.selectValue("id"), 1);
     });
+    
+    QUnit.test("default value as function", function(assert) {
+        let testDefaultValue = null;
+        
+        class TestTable extends Table {
+            constructor() {
+                super();
+                
+                this.columns = {
+                    id: "number",
+                    some_column: {
+                        type: "text",
+                        default: () => testDefaultValue
+                    }
+                };
+            }
+        }
+        
+        let table = new TestTable();
+        let row;
+        
+        testDefaultValue = null;
+        row = table.insert();
+        assert.equal( row.some_column, testDefaultValue );
+        row = table.insert({ some_column: 0 });
+        assert.equal( row.some_column, 0 );
+        
+        testDefaultValue = 100;
+        row = table.insert();
+        assert.equal( row.some_column, testDefaultValue );
+        row = table.insert({ some_column: null });
+        assert.equal( row.some_column, null );
+    });
 
 });
