@@ -1345,5 +1345,137 @@ QUnit.module("Table", {}, function() {
         row = table.insert({ some_column: null });
         assert.equal( row.some_column, null );
     });
+    
+    QUnit.test("unique", function(assert) {
+        class Company extends Table {
+            constructor() {
+                super();
+                
+                this.columns = {
+                    id: "number",
+                    name: {
+                        type: "text",
+                        nulls: false
+                    },
+                    inn: "text",
+                    
+                    id_parent_company: "number",
+                    sort_in_parent_company: {
+                        type: "number",
+                        nulls: false,
+                        default: 1
+                    }
+                };
+                
+                this.unique = [
+                    {
+                        name: "uniq_company_name",
+                        columns: ["name"]
+                    },
+                    {
+                        name: "uniq_company_inn",
+                        columns: ["inn"]
+                    },
+                    {
+                        name: "uniq_company_sort_in_parent_company",
+                        columns: ["id_parent_company", "sort"]
+                    }
+                ];
+            }
+        }
+        
+        let companies = new Company();
+        
+        companies.createTrigger({
+            before: {insert: true}
+        }, function(event) {
+            let company = event.newRow;
+            
+            if ( 
+                company.id_parent_company != null &&
+                (!company.sort || company.sort == 1)
+            ) {
+                let children = companies.select(row => row.id_parent_company == company.id_parent_company);
+                let sorts = children.map(row => row.sort);
+                sorts.push(0); // Math.max.apply(Math, []) => -Infinity
+                let maxSort = Math.max.apply(Math, sorts);
+                
+                company.sort = maxSort + 1;
+            }
+        });
+        
+        companies.insert({
+            name: "Fedor Co"
+        });
+        
+        assert.ok(companies.selectValue("name"), "Fedor Co");
+        
+        try {
+            companies.insert({
+                name: "Fedor Co"
+            });
+            assert.ok(false, "expected error uniq_company_name");
+        } catch(err) {
+            assert.ok(true, "expected error uniq_company_name");
+        }
+        
+        companies.insert({
+            name: "Logo OS",
+            inn: "123"
+        });
+        
+        try {
+            companies.insert({
+                name: "Some row",
+                inn: "123"
+            });
+            assert.ok(false, "expected error uniq_company_inn");
+        } catch(err) {
+            assert.ok(true, "expected error uniq_company_inn");
+        }
+        
+        let parentCompany = companies.insert({
+            name: "Parent Co",
+            inn: "123456"
+        });
+        
+        let child1 = companies.insert({
+            id_parent_company: parentCompany.id,
+            name: "Child 1"
+        });
+        
+        let child2 = companies.insert({
+            id_parent_company: parentCompany.id,
+            name: "Child 2"
+        });
+        
+        assert.equal( child1.sort, 1 );
+        assert.equal( child2.sort, 2 );
+        
+        try {
+            companies.insert({
+                id_parent_company: parentCompany.id,
+                name: "Child 3",
+                sort: 2
+            });
+            assert.ok(false, "expected error uniq_company_sort_in_parent_company");
+        } catch(err) {
+            assert.ok(true, "expected error uniq_company_sort_in_parent_company");
+        }
+        
+        companies.update({
+            sort: 2
+        }, row => row.id == child2.id);
+        
+        try {
+            companies.update({
+                sort: 1
+            }, row => row.id == child2.id);
+            
+            assert.ok(false, "expected error uniq_company_sort_in_parent_company");
+        } catch(err) {
+            assert.ok(true, "expected error uniq_company_sort_in_parent_company");
+        }
+    });
 
 });

@@ -28,6 +28,7 @@ class MyTable extends Table {
             id: "number",
             name: "text",
             note: "text",
+            phone1: "text",
             sum: {
                 type: "number",
                 // default value on insert
@@ -37,6 +38,12 @@ class MyTable extends Table {
                 nulls: false
             }
         };
+        
+        // unique constraints
+        this.unique = [{
+            name: "unique_phone1",
+            columns: ["phone1"]
+        }];
     }
 }
 

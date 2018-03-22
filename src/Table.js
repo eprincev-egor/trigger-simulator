@@ -39,6 +39,9 @@ class Table extends Events {
 
         // redefined me in your class
         this.columns = {};
+        
+        // redefined me in your class
+        this.unique = [];
     }
     //
     // setIdSequence(newIndex) {
@@ -104,7 +107,7 @@ class Table extends Events {
             return null;
         }
     }
-
+    
     insert(row) {
         if ( Array.isArray(row) ) {
             return row.map(row => this.insert(row));
@@ -160,7 +163,8 @@ class Table extends Events {
                     throw new Error("duplicate id");
                 }
             }
-
+            
+            // not null
             for (let key in this.columns) {
                 let column = this.columns[ key ];
                 if ( !column || typeof column == "string"  ) {
@@ -173,7 +177,28 @@ class Table extends Events {
                     }
                 }
             }
-
+            
+            // check unique constraints
+            this.unique.forEach(unique => {
+                // in sql null != null
+                let hasNull = unique.columns.some( key => tmpRow[ key ] == null );
+                
+                if ( hasNull ) {
+                    return;
+                }
+                
+                this.select(row => {
+                    let isDuplicate = unique.columns.every(
+                        key => row[ key ] == tmpRow[ key ]
+                    );
+                    
+                    if ( isDuplicate ) {
+                        let values = unique.columns.map(key => tmpRow[ key ]);
+                        throw new Error(`duplicate key value violates unique constraint "${ unique.name }" DETAIL: (${ unique.columns })=(${ values }) already exists`);
+                    }
+                });
+            });
+            
             this.rows.push(tmpRow);
             currentCommit.addReverse(() => {
                 let index = this.rows.indexOf( tmpRow );
@@ -273,6 +298,7 @@ class Table extends Events {
                 }
             }
             
+            // not null
             for (let key in this.columns) {
                 let column = this.columns[ key ];
                 if ( !column || typeof column == "string"  ) {
@@ -285,6 +311,39 @@ class Table extends Events {
                     }
                 }
             }
+            
+            // check unique constraints
+            this.unique.forEach(unique => {
+                // in sql null != null
+                let hasNull = unique.columns.some( key => tmpRow[ key ] == null );
+                
+                if ( hasNull ) {
+                    return;
+                }
+                
+                // if update on unique columns
+                let hasChanges = unique.columns.some(key => {
+                    let prevValue = row[ key ];
+                    let newValue = tmpRow[ key ];
+                    
+                    return newValue != prevValue;
+                });
+                
+                if ( !hasChanges ) {
+                    return;
+                }
+                
+                this.select(row => {
+                    let isDuplicate = unique.columns.every(
+                        key => row[ key ] == tmpRow[ key ]
+                    );
+                    
+                    if ( isDuplicate ) {
+                        let values = unique.columns.map(key => tmpRow[ key ]);
+                        throw new Error(`duplicate key value violates unique constraint "${ unique.name }" DETAIL: (${ unique.columns })=(${ values }) already exists`);
+                    }
+                });
+            });
 
             let prevValues = {};
             for (let key in tmpRow) {

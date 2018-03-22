@@ -17,11 +17,11 @@ exists:
 + not null
 + update(  updatingRow => ({ sum: updatingRow.sum + 1 })  )
 + delete
++ unique
   
   
 need:  
 - validate types
 - foreign key
-- unique
 - custom serial (sequences)
 - joins
