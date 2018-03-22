@@ -19,6 +19,7 @@ Write your code in Demo/Demo-spec.js
 const {Table} = require("trigger-simulator");
 
 class MyTable extends Table {
+    super();
     constructor() {
         this.columns = {
             // id is primary key with serial
